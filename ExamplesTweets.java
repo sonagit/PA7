@@ -35,12 +35,18 @@ class IllegalTweetServerException extends IllegalArgumentException {
  * DateTime
  */
 class DateTime {
+
+  // fields
   int day;
   int month;
   int year;
 
+  /**
+   * constructor initializes all fields while checking for correct ranges
+   */
   DateTime(int day, int month, int year) {
     switch (month) {
+      // Months with 31 days
       case 1:
       case 3:
       case 5:
@@ -50,12 +56,15 @@ class DateTime {
       case 12:
         this.day = new checkRange(day, 1, 31, "Invalid date");
         break;
+      // Months with 30 days
       case 4:
       case 6:
       case 9:
       case 11:
         this.day = new checkRange(day, 1, 30, "Invalid date");
         break;
+
+      // handle leap years
       case 2:
         if (((year % 4 == 0) && !(year % 100 == 0))
           || (year % 400 == 0)) {
@@ -79,13 +88,14 @@ class DateTime {
       throw new IllegalArgumentException("Invalid date");
     }
   }
+
   /**
    * Checks if val is in range
-   * @param  int    val           [description]
-   * @param  int    min           [description]
-   * @param  int    max           [description]
-   * @param  String msg           [description]
-   * @return        [description]
+   * @param  int    val
+   * @param  int    min
+   * @param  int    max
+   * @param  String msg
+   * @return int
    */
   int checkRange(int val, int min, int max, String msg) {
     if (val >= min && val <= max) {
@@ -97,31 +107,83 @@ class DateTime {
   }
 }
 
+/**
+ * user class
+ */
 class User {
+
+  // fields
   String username;
   String fullname;
 
+  /**
+   * constructor initializes all fields
+   */
   User(String username, String fullname) {
     // Fill
   }
 }
 
+/**
+ * TextTweet class
+ */
 class TextTweet {
+
+  // fields
   User user;
   DateTime timestamp;
   String content;
   String tweetId;
   int likes;
 
+  /**
+   * constructor initializes all fields
+   */
   TextTweet(User user, DateTime timestamp, String content, String tweetId, int likes) {
     // Fill
   }
 }
 
+/**
+ * TweetList interface for our TLLink and TLEmpty classes
+ */
 interface TweetList {
   // will need new methods
   // count?
   // duplicate ID?
+
+  // function prototypes
+  boolean idExists(String id);
+  int count(IQuery q);
+
+}
+
+/**
+ * TLEmpty class returns base cases for all functions
+ */
+class TLEmpty implements TweetList {
+  /**
+   * constructor initializes all fields
+   */
+  TLEmpty() { }
+}
+
+/**
+ * TLLink class is for creating a TweetList
+ */
+class TLLink implements TweetList {
+
+  // fields
+  TextTweet first;
+  TweetList rest;
+
+  /**
+   * constructor initializes all fields
+   */
+  TLLink(TextTweet first, TweetList rest) {
+    this.first = first;
+    this.rest = rest;
+  }
 
   /**
    * Test to see if a tweet with a certain tweetID exists
@@ -136,19 +198,20 @@ interface TweetList {
     if(tweets.count(iq) > 0) { return true; }
     else { return false; }
   }
-}
 
-class TLEmpty implements TweetList {
-  TLEmpty() { }
-}
-
-class TLLink implements TweetList {
-  TextTweet first;
-  TweetList rest;
-  TLLink(TextTweet first, TweetList rest) {
-    this.first = first;
-    this.rest = rest;
+  /**
+   * counts the number of instances in list
+   * @param  query
+   * @return int
+   */
+  public int count(int query){
+    if(q.matches(tweet)){
+      return 1 + rest.count(q);
+    } else {
+      return rest.count(q);
+    }
   }
+
 }
 
 class TweetServer {
