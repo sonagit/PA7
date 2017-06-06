@@ -7,7 +7,6 @@ import tester.*;
 
 /**
  * Date exception class
- *
  */
 class IllegalDateException extends IllegalArgumentException {
   IllegalDateException(String message) { super(message); }
@@ -31,6 +30,7 @@ class IllegalTweetException extends IllegalArgumentException {
 class IllegalTweetServerException extends IllegalArgumentException {
   IllegalTweetServerException(String message) { super(message); }
 }
+
 /**
  * DateTime
  */
@@ -54,55 +54,38 @@ class DateTime {
       case 8:
       case 10:
       case 12:
-        this.day = new checkRange(day, 1, 31, "Invalid date");
+        this.day = new Utils().checkRange(day, 1, 31, "Invalid date");
         break;
       // Months with 30 days
       case 4:
       case 6:
       case 9:
       case 11:
-        this.day = new checkRange(day, 1, 30, "Invalid date");
+        this.day = new Utils().checkRange(day, 1, 30, "Invalid date");
         break;
 
       // handle leap years
       case 2:
         if (((year % 4 == 0) && !(year % 100 == 0))
           || (year % 400 == 0)) {
-          this.day = new checkRange(day, 1, 29, "Invalid date");
+          this.day = new Utils().checkRange(day, 1, 29, "Invalid date");
           break;
         }
         else {
-          this.day = new checkRange(day, 1, 28, "Invalid date");
+          this.day = new Utils().checkRange(day, 1, 28, "Invalid date");
           break;
         }
     }
 
     // month should be 1-12 inclusive
-    this.month  = new checkRange(month, 1, 12, "Invalid date");
+    this.month  = new Utils().checkRange(month, 1, 12, "Invalid date");
 
     // Year should be non-negative
     if (year >= 0) {
       this.year = year;
     }
     else {
-      throw new IllegalArgumentException("Invalid date");
-    }
-  }
-
-  /**
-   * Checks if val is in range
-   * @param  int    val
-   * @param  int    min
-   * @param  int    max
-   * @param  String msg
-   * @return int
-   */
-  int checkRange(int val, int min, int max, String msg) {
-    if (val >= min && val <= max) {
-      return val;
-    }
-    else {
-      throw new IllegalArgumentException(msg);
+      throw new IllegalDateException("Invalid date");
     }
   }
 }
@@ -153,8 +136,8 @@ interface TweetList {
   // duplicate ID?
 
   // function prototypes
-  boolean idExists(String id);
-  int count(IQuery q);
+  //boolean idExists(String id);
+  //int count(IQuery q);
 
 }
 
@@ -191,26 +174,26 @@ class TLLink implements TweetList {
    * @param String id
    * @return boolean
    */
-  boolean idExists(String id) {
+/*  boolean idExists(String id) {
 
     // create an ID query
     IdQuery iq = new IdQuery(id);
     if(tweets.count(iq) > 0) { return true; }
     else { return false; }
-  }
+  }//*/
 
   /**
    * counts the number of instances in list
    * @param  query
    * @return int
    */
-  public int count(int query){
+/*  public int count(int query){
     if(q.matches(tweet)){
       return 1 + rest.count(q);
     } else {
       return rest.count(q);
     }
-  }
+  }//*/
 
 }
 
@@ -222,16 +205,50 @@ class TweetServer {
   }
 }
 
+class Utils {
+  /**
+   * Checks if val is in range
+   * @param  int    val
+   * @param  int    min
+   * @param  int    max
+   * @param  String msg
+   * @return int
+   */
+  int checkRange(int val, int min, int max, String msg) throws IllegalDateException {
+    if (val >= min && val <= max) {
+      return val;
+    }
+    else {
+      throw new IllegalDateException(msg);
+    }
+  }
+
+}
 class ExamplesTweets {
-  boolean testException(Tester t) {
-    DateTime gd1 = new DateTime(12,12,2012);
-    DateTime gd2 = new DateTime(2,12,1999);
-    DateTime bd1 = new DateTime(-12,12,2012);
-    DateTime bd2 = new DateTime("jan",12,2012);
+  DateTime gd1 = new DateTime(12,12,2012);
+  DateTime gd2 = new DateTime(2,12,1999);
+  DateTime gd3 = new DateTime(1,1,1);
+  //DateTime bd1 = new DateTime(-12,12,2012);
+  //DateTime bd2 = new DateTime(50,12,2012);
+
+  boolean testDateTime(Tester t) {
+    return  t.checkExpect(new DateTime(12,12,2012), gd1) &&
+            t.checkExpect(new DateTime(2,12,1999), gd2) &&
+            t.checkExpect(new DateTime(1,1,1), gd3);
+  }
+  boolean testDateException(Tester t) {
     t.checkConstructorException(
       new IllegalDateException("Invalid date"),
       "DateTime",
-      12,12,2012);
+      50,12,2012);
+    t.checkConstructorException(
+      new IllegalDateException("Invalid date"),
+      "DateTime",
+      29,2,2011);
+    t.checkConstructorException(
+      new IllegalDateException("Invalid date"),
+      "DateTime",
+      29,2,2011);
     return true;
   }
 }
