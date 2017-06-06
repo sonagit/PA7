@@ -103,10 +103,30 @@ class User {
    * constructor initializes all fields
    */
   User(String username, String fullname) {
-    // Fill
+    // flag for names being valid
+    boolean validNames = true;
+
+    if(username.length()<4
+      || username.length()>30
+      || fullname.length()<1
+      || fullname.length()>100) {
+        validNames = false;
+    }
+
+    for(int i=0; i<username.length(); i+=1) {
+      if(!((username.charAt(i)>='a' && username.charAt(i)<='z')
+      || (username.charAt(i)>='A' && username.charAt(i)<='Z')
+      || (username.charAt(i)>='0' && username.charAt(i)<='9'))) {
+        validNames = false;
+      }
+    }
+    if(validNames) {
+      this.username = username;
+      this.fullname = fullname;
+    }
+    else { throw new IllegalUserException("Invalid User"); }
   }
 }
-
 /**
  * TextTweet class
  */
@@ -123,7 +143,22 @@ class TextTweet {
    * constructor initializes all fields
    */
   TextTweet(User user, DateTime timestamp, String content, String tweetId, int likes) {
-    // Fill
+    boolean validFields = true;
+    if(content.length()<1 || content.length()>100) { validFields = false; }
+    if(likes<0) { validFields = false; }
+    for(int i=0; i<tweetId.length(); i+=1) {
+      if(tweetId.charAt(i)<'0' || tweetId.charAt(i)>'9') {
+        validFields = false;
+        break;
+      }
+    }
+    if(validFields) {
+      this.user = user;
+      this.timestamp = timestamp;
+      this.content = content;
+      this.tweetId = tweetId;
+    }
+    else { throw new IllegalTweetException("Invalid tweet"); }
   }
 }
 
@@ -225,16 +260,20 @@ class Utils {
 
 }
 class ExamplesTweets {
+  User gu1 = new User("stubaby", "Stu Baby");
+  User gu2 = new User("kamala", "CAMALA");
+  User gu3 = new User("zylvan", "Zylvanio Sonatina");
   DateTime gd1 = new DateTime(12,12,2012);
   DateTime gd2 = new DateTime(2,12,1999);
   DateTime gd3 = new DateTime(1,1,1);
-  //DateTime bd1 = new DateTime(-12,12,2012);
-  //DateTime bd2 = new DateTime(50,12,2012);
+  TextTweet gt1 = new TextTweet(gu1, gd1, "Con...tent", "1", 0001);
+  TextTweet gt2 = new TextTweet(gu2, gd2, "Connnnn...tent", "99999", 0011);
+  TextTweet gt3 = new TextTweet(gu3, gd3, "Con...tttttent", "00100", 0101);
 
   boolean testDateTime(Tester t) {
     return  t.checkExpect(new DateTime(12,12,2012), gd1) &&
-            t.checkExpect(new DateTime(2,12,1999), gd2) &&
-            t.checkExpect(new DateTime(1,1,1), gd3);
+          t.checkExpect(new DateTime(2,12,1999), gd2) &&
+          t.checkExpect(new DateTime(1,1,1), gd3);
   }
   boolean testDateException(Tester t) {
     t.checkConstructorException(
@@ -249,6 +288,48 @@ class ExamplesTweets {
       new IllegalDateException("Invalid date"),
       "DateTime",
       29,2,2011);
+    return true;
+  }
+
+  boolean testUser(Tester t) {
+    return  t.checkExpect(new User("stubaby", "Stu Baby"), gu1) &&
+            t.checkExpect(new User("kamala", "CAMALA"), gu2) &&
+            t.checkExpect(new User("zylvan", "Zylvanio Sonatina"), gu3);
+  }//*/
+  boolean testUserException(Tester t) {
+    t.checkConstructorException(
+      new IllegalUserException("Invalid User"),
+      "User",
+      "zyl", "Zylvanio");
+    t.checkConstructorException(
+      new IllegalUserException("Invalid User"),
+      "User",
+      "zyl-", "Zylvanio Zylvanio");
+    t.checkConstructorException(
+      new IllegalUserException("Invalid User"),
+      "User",
+      "zyl", "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+    return true;
+  }
+
+  boolean testTweet(Tester t) {
+    return  t.checkExpect(new TextTweet(gu1, gd1, "Con...tent", "1", 0001), gt1) &&
+            t.checkExpect(new TextTweet(gu2, gd2, "Connnnn...tent", "99999", 0011), gt2) &&
+            t.checkExpect(new TextTweet(gu3, gd3, "Con...tttttent", "00100", 0101), gt3);
+  }
+  boolean testTweetException(Tester t) {
+    t.checkConstructorException(
+    new IllegalTweetException("Invalid tweet"),
+    "TextTweet",
+    gu1, gd1, "These are my thoughts", "wonky-id", 1000);
+    t.checkConstructorException(
+    new IllegalTweetException("Invalid tweet"),
+    "TextTweet",
+    gu1, gd1, "These are all of my thoughts. They aren't much, but they certainly extend past the measly 140 character limit placed on my by the always-watching bots of the internet.", "999999", 1000);
+    t.checkConstructorException(
+    new IllegalTweetException("Invalid tweet"),
+    "TextTweet",
+    gu1, gd1, "These are my thoughts", "1", -1000);
     return true;
   }
 }
