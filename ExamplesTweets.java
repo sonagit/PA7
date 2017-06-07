@@ -31,9 +31,9 @@ class IllegalTweetServerException extends IllegalArgumentException {
   IllegalTweetServerException(String message) { super(message); }
 }
 
-/**
+/******************************************************************************
  * DateTime
- */
+ *****************************************************************************/
 class DateTime {
 
   // fields
@@ -90,9 +90,9 @@ class DateTime {
   }
 }
 
-/**
+/******************************************************************************
  * user class
- */
+ *****************************************************************************/
 class User {
 
   // fields
@@ -120,6 +120,8 @@ class User {
         validNames = false;
       }
     }
+
+    // initialize fields iff conditions are met
     if(validNames) {
       this.username = username;
       this.fullname = fullname;
@@ -127,9 +129,9 @@ class User {
     else { throw new IllegalUserException("Invalid User"); }
   }
 }
-/**
+/******************************************************************************
  * TextTweet class
- */
+ *****************************************************************************/
 class TextTweet {
 
   // fields
@@ -152,43 +154,67 @@ class TextTweet {
         break;
       }
     }
+
+    // initialize fields iff conditions are met
     if(validFields) {
       this.user = user;
       this.timestamp = timestamp;
       this.content = content;
       this.tweetId = tweetId;
     }
-    else { throw new IllegalTweetException("Invalid tweet"); }
+    else { throw new IllegalTweetException("Invalid Tweet"); }
   }
 }
 
-/**
+/******************************************************************************
  * TweetList interface for our TLLink and TLEmpty classes
- */
+ *****************************************************************************/
 interface TweetList {
-  // will need new methods
-  // count?
-  // duplicate ID?
-
   // function prototypes
-  //boolean idExists(String id);
-  //int count(IQuery q);
-
+  boolean idExists(String id);
+  int count(String id);
+  String getIds();
 }
 
-/**
+/******************************************************************************
  * TLEmpty class returns base cases for all functions
- */
+ *****************************************************************************/
 class TLEmpty implements TweetList {
   /**
    * constructor initializes all fields
    */
   TLEmpty() { }
+
+  /**
+   * Return base case of idExists
+   * @param  String id
+   * @return int
+   */
+  public boolean idExists(String id) {
+    return false;
+  }
+
+  /**
+   * Return base case of count
+   * @param  String id
+   * @return int
+   */
+  public int count(String id) {
+    return 0;
+  }
+
+  /**
+   * Return base case of getIds
+   * @return String
+   */
+  public String getIds() {
+    return " ";
+  }
 }
 
-/**
+/******************************************************************************
  * TLLink class is for creating a TweetList
- */
+ *****************************************************************************/
 class TLLink implements TweetList {
 
   // fields
@@ -209,37 +235,64 @@ class TLLink implements TweetList {
    * @param String id
    * @return boolean
    */
-/*  boolean idExists(String id) {
-
-    // create an ID query
-    IdQuery iq = new IdQuery(id);
-    if(tweets.count(iq) > 0) { return true; }
-    else { return false; }
+  public boolean idExists(String id) {
+    if(this.first.tweetId == id) { return true; }
+    else {
+      this.rest.idExists(id);
+      return false;
+    }
   }//*/
 
   /**
    * counts the number of instances in list
-   * @param  query
+   * @param String id
    * @return int
    */
-/*  public int count(int query){
-    if(q.matches(tweet)){
-      return 1 + rest.count(q);
-    } else {
-      return rest.count(q);
+  public int count(String id){
+    if(this.first.tweetId == id) {
+      return 1 + rest.count(id);
     }
+    else { return rest.count(id); }
   }//*/
 
-}
-
-class TweetServer {
-  TweetList tweets;
-  User[] user;
-  TweetServer(TweetList tweets, User[] users) {
-    // Insert checks here
+  /**
+   * returns a String with all the IDs separated by spaces
+   *
+   * @return String
+   */
+  public String getIds() {
+    return this.first.tweetId + "-" + this.rest.getIds();
   }
 }
 
+/******************************************************************************
+ * TweetServer class
+ *****************************************************************************/
+class TweetServer {
+  TweetList tweets;
+  User[] users;
+  TweetServer(TweetList tweets, User[] users) {
+    // flag
+    boolean validFields = true;
+
+    // check for duplicate users or tweets
+    if ( (new Utils().userDup(users))
+      || (new Utils().tweetIdDup(tweets)) ) {
+      validFields = false;
+    }
+
+    // initialize fields iff conditions are met
+    if (validFields) {
+      this.users = users;
+      this.tweets = tweets;
+    }
+    else { throw new IllegalTweetServerException("Invalid Server"); }
+  }
+}
+
+/******************************************************************************
+ * Utility functions
+******************************************************************************/
 class Utils {
   /**
    * Checks if val is in range
@@ -258,22 +311,77 @@ class Utils {
     }
   }
 
+  /**
+   * method to check if the user array contains duplicate users
+   *
+   * @param  Users[] users
+   * @return boolean
+   */
+  boolean userDup(User[] users) {
+    boolean duplicate = false;
+    // iterate through the array and check each user against the others
+    for (int j=0; j<users.length; j++) {
+      for (int k=j+1; k<users.length; k++) {
+        if ((k!=j) && users[j].username.equals(users[k].username)) {
+          duplicate = true;
+        }
+      }
+    }
+    return duplicate;
+  }
+
+  /**
+   * Check tweetlist for duplicate IDs
+   * @param  TweetList tl
+   * @return boolean
+   */
+  boolean tweetIdDup(TweetList tl) {
+    boolean duplicate = false;
+    String ids[] = tl.getIds().split("-");
+
+    for (int j=0; j<ids.length; j++) {
+      for (int k=j+1; k<ids.length; k++) {
+        if ((k!=j) && ids[j].equals(ids[k])) {
+          duplicate = true;
+        }
+      }
+    }
+    return duplicate;
+  }
 }
+/******************************************************************************
+ * Testing Tiiiiiiiiiiiime!
+ *****************************************************************************/
 class ExamplesTweets {
-  User gu1 = new User("stubaby", "Stu Baby");
-  User gu2 = new User("kamala", "CAMALA");
-  User gu3 = new User("zylvan", "Zylvanio Sonatina");
-  DateTime gd1 = new DateTime(12,12,2012);
-  DateTime gd2 = new DateTime(2,12,1999);
-  DateTime gd3 = new DateTime(1,1,1);
-  TextTweet gt1 = new TextTweet(gu1, gd1, "Con...tent", "1", 0001);
-  TextTweet gt2 = new TextTweet(gu2, gd2, "Connnnn...tent", "99999", 0011);
-  TextTweet gt3 = new TextTweet(gu3, gd3, "Con...tttttent", "00100", 0101);
+  User user1 = new User("stubaby", "Stu Baby");
+  User user2 = new User("kamala", "CAMALA");
+  User user3 = new User("zylvan", "Zylvanio Sonatina");
+  User[] ua1 = {user1, user2, user3};
+  User[] ua2 = {user1, user2, user3, user3};
+
+  DateTime dt1 = new DateTime(12,12,2012);
+  DateTime dt2 = new DateTime(2,12,1999);
+  DateTime dt3 = new DateTime(1,1,1);
+
+  TextTweet tt1 = new TextTweet(user1, dt1, "Con...tent", "1", 0001);
+  TextTweet tt2 = new TextTweet(user2, dt2, "Connnnn...tent", "99999", 0011);
+  TextTweet tt3 = new TextTweet(user3, dt3, "Con...tttttent", "00100", 0101);
+  TextTweet tt4 = new TextTweet(user2, dt3, "Con...tttttent", "00100", 0101);
+
+  TweetList tl =  new TLLink(tt1,
+                  new TLLink(tt2,
+                  new TLLink(tt3,
+                  new TLEmpty())));
+  TweetList tl1 = new TLLink(tt1, tl);
+  TweetList tl2 = new TLLink(tt4, tl);
+
+  TweetServer ts1 = new TweetServer(tl, ua1);
+  TweetServer ts2 = new TweetServer(new TLEmpty(), new User[] {});
 
   boolean testDateTime(Tester t) {
-    return  t.checkExpect(new DateTime(12,12,2012), gd1) &&
-          t.checkExpect(new DateTime(2,12,1999), gd2) &&
-          t.checkExpect(new DateTime(1,1,1), gd3);
+    return  t.checkExpect(new DateTime(12,12,2012), dt1) &&
+          t.checkExpect(new DateTime(2,12,1999), dt2) &&
+          t.checkExpect(new DateTime(1,1,1), dt3);
   }
   boolean testDateException(Tester t) {
     t.checkConstructorException(
@@ -292,9 +400,9 @@ class ExamplesTweets {
   }
 
   boolean testUser(Tester t) {
-    return  t.checkExpect(new User("stubaby", "Stu Baby"), gu1) &&
-            t.checkExpect(new User("kamala", "CAMALA"), gu2) &&
-            t.checkExpect(new User("zylvan", "Zylvanio Sonatina"), gu3);
+    return  t.checkExpect(new User("stubaby", "Stu Baby"), user1) &&
+            t.checkExpect(new User("kamala", "CAMALA"), user2) &&
+            t.checkExpect(new User("zylvan", "Zylvanio Sonatina"), user3);
   }//*/
   boolean testUserException(Tester t) {
     t.checkConstructorException(
@@ -313,23 +421,47 @@ class ExamplesTweets {
   }
 
   boolean testTweet(Tester t) {
-    return  t.checkExpect(new TextTweet(gu1, gd1, "Con...tent", "1", 0001), gt1) &&
-            t.checkExpect(new TextTweet(gu2, gd2, "Connnnn...tent", "99999", 0011), gt2) &&
-            t.checkExpect(new TextTweet(gu3, gd3, "Con...tttttent", "00100", 0101), gt3);
+    return  t.checkExpect(new TextTweet(user1, dt1, "Con...tent", "1", 0001), tt1) &&
+            t.checkExpect(new TextTweet(user2, dt2, "Connnnn...tent", "99999", 0011), tt2) &&
+            t.checkExpect(new TextTweet(user3, dt3, "Con...tttttent", "00100", 0101), tt3);
   }
   boolean testTweetException(Tester t) {
     t.checkConstructorException(
-    new IllegalTweetException("Invalid tweet"),
+    new IllegalTweetException("Invalid Tweet"),
     "TextTweet",
-    gu1, gd1, "These are my thoughts", "wonky-id", 1000);
+    user1, dt1, "These are my thoughts", "wonky-id", 1000);
     t.checkConstructorException(
-    new IllegalTweetException("Invalid tweet"),
+    new IllegalTweetException("Invalid Tweet"),
     "TextTweet",
-    gu1, gd1, "These are all of my thoughts. They aren't much, but they certainly extend past the measly 140 character limit placed on my by the always-watching bots of the internet.", "999999", 1000);
+    user1, dt1, "These are all of my thoughts. They aren't much, but they certainly extend past the measly 140 character limit placed on my by the always-watching bots of the internet.", "999999", 1000);
     t.checkConstructorException(
-    new IllegalTweetException("Invalid tweet"),
+    new IllegalTweetException("Invalid Tweet"),
     "TextTweet",
-    gu1, gd1, "These are my thoughts", "1", -1000);
+    user1, dt1, "These are my thoughts", "1", -1000);
+    return true;
+  }
+
+  boolean testServer(Tester t) {
+    return  t.checkExpect(new TLLink(tt1, tl), tl1) &&
+            t.checkExpect(new TweetServer(tl, ua1), ts1) &&
+            t.checkExpect(new TweetServer(new TLEmpty(), new User[] {}), ts2);
+  }
+  boolean testTweetServerException(Tester t) {
+    t.checkConstructorException(
+    new IllegalTweetServerException("Invalid Server"),
+    "TweetServer",
+    tl1, // duplicate tweets
+    ua1);
+    t.checkConstructorException(
+    new IllegalTweetServerException("Invalid Server"),
+    "TweetServer",
+    tl,
+    ua2); // duplicate user
+    t.checkConstructorException(
+    new IllegalTweetServerException("Invalid Server"),
+    "TweetServer",
+    tl2, // duplicate tweetId in tweetlist
+    ua1);
     return true;
   }
 }
